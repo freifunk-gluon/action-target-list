@@ -1,0 +1,35 @@
+---
+name: 'Get list of available targets for Gluon release'
+description: 'Returns targets available in a specified Gluon release'
+inputs:
+  gluon-path:
+    description: 'Path to Gluon repository'
+    required: true
+  allowlist:
+    description: 'Space-separated list of targets to be returned if available'
+    required: false
+  denylist:
+    description: |
+      'Space-separated list of targets to be excluded from the result'
+    required: false
+  broken:
+    description: 'Determines if BROKEN targets should be returned (Default: 0)'
+    default: 0
+outputs:
+  targets:
+    description: 'JSON list containing all valid targets'
+    value: ${{ steps.save-step.outputs.targets }}
+runs:
+  using: 'composite'
+  steps:
+    - run: >
+        bash ${{ github.action_path }}/entrypoint.sh
+        ${{ inputs.gluon-path }} > /tmp/targets.json
+      shell: bash
+      env:
+        ALLOWLIST: ${{ inputs.allowlist }}
+        DENYLIST: ${{ inputs.denylist }}
+        BROKEN: ${{ inputs.broken }}
+    - run: echo "targets=$(cat /tmp/targets.json)" >> "$GITHUB_OUTPUT"
+      shell: bash
+      id: save-step
